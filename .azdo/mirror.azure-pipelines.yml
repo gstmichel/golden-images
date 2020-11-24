@@ -1,0 +1,15 @@
+resources:
+  repositories:
+    - repository: templates
+      name: azdo-templates
+      type: git
+
+trigger:
+  - "*"
+
+pr: []
+
+jobs:
+  - template: git-mirror.jobs.v1.yml@templates
+    parameters:
+      remote_url: git@github.com:gstmichel/iso-preseed-creator.git

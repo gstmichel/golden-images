@@ -1,2 +1,3 @@
-debian/server-noswap/isofiles/
-debian/server-noswap/isohdpfx.bin
+node_modules/
+package*.json
+commitlint.config.js

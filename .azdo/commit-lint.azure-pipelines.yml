@@ -1,0 +1,36 @@
+trigger: none
+
+jobs:
+  - job: commitlint
+    steps:
+      - bash: |
+          npm install @commitlint/{config-conventional,cli}
+          echo "##vso[task.prependpath]$AGENT_WORKFOLDER/node_modules/.bin"
+        displayName: Install Commitlint
+
+      - bash: git fetch --all
+        displayName: Fetch Git Pointer
+
+      - bash: |
+          if [ ! -f package.json ];
+          then
+            echo "module.exports = {extends: ['@commitlint/config-conventional']}" > commitlint.config.js
+          fi
+        displayName: Create commitlint.config.js
+
+      - bash: |
+          TARGETBRANCH=$(echo $SYSTEM_PULLREQUEST_TARGETBRANCH | sed 's|refs/heads|refs/remotes/origin|g' )
+          SOURCEBRANCH=$(echo $SYSTEM_PULLREQUEST_SOURCEBRANCH | sed 's|refs/heads|refs/remotes/origin|g' )
+
+          for commit in $(git log --format="%H" $TARGETBRANCH..$SOURCEBRANCH)
+          do
+            echo "Parsing $commit"
+            git log -n1 --format="%B" $commit | commitlint
+
+            if [ $? != 0 ]
+            then
+              >&2 echo "##vso[task.logissue type=error]commitlint failed on commit $commit"
+            fi
+          done
+        displayName: Parse Commit Logs
+        failOnStderr: true

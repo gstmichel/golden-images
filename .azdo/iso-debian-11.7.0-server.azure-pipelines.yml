@@ -1,0 +1,17 @@
+resources:
+  repositories:
+    - repository: templates
+      name: azdo-templates
+      type: git
+      ref: refs/heads/feature/nexus-upload
+
+trigger: none
+
+jobs:
+  - template: templates/build-debian-iso.jobs.v1.yml
+    parameters:
+      iso_name: debian-11.7.0-amd64-netinst.iso
+      preseed_cfg_path: server-preseed.cfg
+      grub_cfg_path: autoinstall-grub.cfg
+      iso_output_name: debian-11.7.0-amd64-netinst.iso
+      version: 11.7.0

@@ -6,9 +6,6 @@ resources:
       ref: refs/heads/feature/nexus-upload
 
 trigger:
-  # branches:
-  #   include:
-  #     - '*
   paths:
     include:
       - .azdo/azure-pipelines/iso-debian-11.7.0-server.yml

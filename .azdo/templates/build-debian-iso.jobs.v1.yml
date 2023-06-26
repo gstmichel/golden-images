@@ -22,86 +22,98 @@ jobs:
 
       - checkout: self
 
-      - bash: curl -LO $DML_URL/repositories/local-release-raw/debian/$ISO_NAME debian.iso
+      - bash: |
+          mkdir download
+          cp -f /mnt/isos/official/debian/$ISO_NAME download/$ISO_NAME
         displayName: Download Source ISO
         env:
           ISO_NAME: ${{ parameters.iso_name }}
-          DML_URL: $(dml.url)
 
       - bash: |
-          xorriso -osirrox on -indev debian.iso -extract / isofiles
-          chmod +w -R isofiles/install.amd/
-          gunzip isofiles/install.amd/initrd.gz
-          mkdir isofiles/install.amd/tmp
-          cd isofiles/install.amd/tmp
-          sudo cpio -id < ../initrd
-        displayName: Prepare ISO Structure
+          packer build debian.pkr.hcl
+        displayName: Packer build
+        workingDirectory: debian
 
-      - bash: |
-          cp $CONFIG_PATH isofiles/install.amd/tmp/preseed.cfg
-        displayName: Install Preseed File
-        env:
-          CONFIG_PATH: iso/debian/${{ parameters.preseed_cfg_path }}
+      # - bash: curl -LO $DML_URL/repositories/local-release-raw/debian/$ISO_NAME debian.iso
+      #   displayName: Download Source ISO
+      #   env:
+      #     ISO_NAME: ${{ parameters.iso_name }}
+      #     DML_URL: $(dml.url)
 
-      - bash: |
-          sudo cp $GRUB_PATH isofiles/boot/grub/grub.cfg
-          sudo chmod 444 isofiles/boot/grub/grub.cfg
-        condition: ne( '${{ parameters.grub_cfg_path }}', '')
-        env:
-          GRUB_PATH: iso/debian/${{ parameters.grub_cfg_path }}
-        displayName: Install Grub
+      # - bash: |
+      #     xorriso -osirrox on -indev debian.iso -extract / isofiles
+      #     chmod +w -R isofiles/install.amd/
+      #     gunzip isofiles/install.amd/initrd.gz
+      #     mkdir isofiles/install.amd/tmp
+      #     cd isofiles/install.amd/tmp
+      #     sudo cpio -id < ../initrd
+      #   displayName: Prepare ISO Structure
 
-      - bash: |
-          cd isofiles/install.amd/tmp/
-          find . | sudo cpio --create --format='newc' > ../initrd
-          cd ../../..
-          sudo rm -rf isofiles/install.amd/tmp
-        displayName: CPIO Create newc
+      # - bash: |
+      #     cp $CONFIG_PATH isofiles/install.amd/tmp/preseed.cfg
+      #   displayName: Install Preseed File
+      #   env:
+      #     CONFIG_PATH: iso/debian/${{ parameters.preseed_cfg_path }}
 
-      - bash: |
-          gzip isofiles/install.*/initrd
-          chmod -w -R isofiles/install.*/
-          chmod +w isofiles/md5sum.txt
+      # - bash: |
+      #     sudo cp $GRUB_PATH isofiles/boot/grub/grub.cfg
+      #     sudo chmod 444 isofiles/boot/grub/grub.cfg
+      #   condition: ne( '${{ parameters.grub_cfg_path }}', '')
+      #   env:
+      #     GRUB_PATH: iso/debian/${{ parameters.grub_cfg_path }}
+      #   displayName: Install Grub
 
-          cd isofiles 
-          find -follow -type f ! -name md5sum.txt -print0 | xargs -0 md5sum > md5sum.txt
-          chmod -w md5sum.txt
-        displayName: Complete ISO Structure
+      # - bash: |
+      #     cd isofiles/install.amd/tmp/
+      #     find . | sudo cpio --create --format='newc' > ../initrd
+      #     cd ../../..
+      #     sudo rm -rf isofiles/install.amd/tmp
+      #   displayName: CPIO Create newc
 
-      - bash: dd if=debian.iso bs=1 count=432 of=isohdpfx.bin
-        displayName: Extract isohdpfx.bin
+      # - bash: |
+      #     gzip isofiles/install.*/initrd
+      #     chmod -w -R isofiles/install.*/
+      #     chmod +w isofiles/md5sum.txt
 
-      - bash: |
-          xorriso -as mkisofs \
-                  -r \
-                  -V 'Debian' \
-                  -o $OUTPUT_DIR/$ISO_NAME \
-                  -J -J \
-                  -joliet-long \
-                  -cache-inodes \
-                  -isohybrid-mbr isohdpfx.bin \
-                  -b isolinux/isolinux.bin \
-                  -c isolinux/boot.cat \
-                  -boot-load-size 4 \
-                  -boot-info-table \
-                  -no-emul-boot \
-                  -eltorito-alt-boot \
-                  -e boot/grub/efi.img \
-                  -no-emul-boot \
-                  -isohybrid-gpt-basdat \
-                  -isohybrid-apm-hfsplus \
-                  isofiles
-        displayName: Generate ISO
-        env:
-          ISO_NAME: ${{ parameters.iso_output_name }}
-          OUTPUT_DIR: $(Build.BinariesDirectory)
+      #     cd isofiles
+      #     find -follow -type f ! -name md5sum.txt -print0 | xargs -0 md5sum > md5sum.txt
+      #     chmod -w md5sum.txt
+      #   displayName: Complete ISO Structure
 
-      - template: nexus-upload.steps.v1.yml@templates
-        parameters:
-          authentication: $(dml.authentication)
-          upload:
-            raw:
-              directory: /debian/${{ parameters.version }}/
-              files:
-                - name: ${{ parameters.iso_output_name }}
-                  content: $OUTPUT_DIR/$ISO_NAME
+      # - bash: dd if=debian.iso bs=1 count=432 of=isohdpfx.bin
+      #   displayName: Extract isohdpfx.bin
+
+      # - bash: |
+      #     xorriso -as mkisofs \
+      #             -r \
+      #             -V 'Debian' \
+      #             -o $OUTPUT_DIR/$ISO_NAME \
+      #             -J -J \
+      #             -joliet-long \
+      #             -cache-inodes \
+      #             -isohybrid-mbr isohdpfx.bin \
+      #             -b isolinux/isolinux.bin \
+      #             -c isolinux/boot.cat \
+      #             -boot-load-size 4 \
+      #             -boot-info-table \
+      #             -no-emul-boot \
+      #             -eltorito-alt-boot \
+      #             -e boot/grub/efi.img \
+      #             -no-emul-boot \
+      #             -isohybrid-gpt-basdat \
+      #             -isohybrid-apm-hfsplus \
+      #             isofiles
+      #   displayName: Generate ISO
+      #   env:
+      #     ISO_NAME: ${{ parameters.iso_output_name }}
+      #     OUTPUT_DIR: $(Build.BinariesDirectory)
+
+      # - template: nexus-upload.steps.v1.yml@templates
+      #   parameters:
+      #     authentication: $(dml.authentication)
+      #     upload:
+      #       raw:
+      #         directory: /debian/${{ parameters.version }}/
+      #         files:
+      #           - name: ${{ parameters.iso_output_name }}
+      #             content: $OUTPUT_DIR/$ISO_NAME

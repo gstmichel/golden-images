@@ -8,6 +8,6 @@ venv/
 ansible/
 requirements.txt
 
-packer/download/
-packer/output-*/
-packer/*-manifest.json
+download/
+output-*/
+*-manifest.json

@@ -1,3 +1,11 @@
 node_modules/
 package*.json
 commitlint.config.js
+
+venv/
+ansible/
+requirements.txt
+
+packer/download/
+packer/output-*/
+packer/*-manifest.json

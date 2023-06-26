@@ -5,7 +5,15 @@ resources:
       type: git
       ref: refs/heads/feature/nexus-upload
 
-trigger: none
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - .azdo/azure-pipelines/iso-debian-11.7.0-server.yml
+      - .azdo/templates/build-debian-iso.jobs.v1.yml
+      - packer/debian-*.pkr.hcl
 
 jobs:
   - template: ../templates/build-debian-iso.jobs.v1.yml

@@ -29,10 +29,8 @@ jobs:
         env:
           ISO_NAME: ${{ parameters.iso_name }}
 
-      - bash: |
-          packer build debian.pkr.hcl
+      - bash: packer build debian.pkr.hcl
         displayName: Packer build
-        workingDirectory: debian
 
       # - bash: curl -LO $DML_URL/repositories/local-release-raw/debian/$ISO_NAME debian.iso
       #   displayName: Download Source ISO

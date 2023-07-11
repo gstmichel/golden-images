@@ -1,0 +1,11 @@
+trigger: none
+
+stages:
+  - stage: build
+    displayName: Build
+    jobs:
+      - template: ../templates/build-windows.jobs.v1.yml
+        parameters:
+          packer_file: windows-10.pkr.hcl
+          windows_iso: windows-10-enterprise-amd64.iso
+          vagrant_name: windows-10-enterprise.box

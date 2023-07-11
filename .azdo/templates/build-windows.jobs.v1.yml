@@ -1,0 +1,59 @@
+parameters:
+  - name: packer_file
+    displayName: Packer file to build
+  - name: windows_iso
+    displayName: Name of the windows ISO file
+  - name: vagrant_name
+    displayName: Vagrant Name
+
+jobs:
+  - job: packer
+    displayName: Packer Build
+    timeoutInMinutes: 0
+    pool:
+      demands:
+        - PACKER
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: 3.x
+          architecture: x64
+
+      - bash: |
+          python -m venv venv
+          . ./venv/bin/activate
+          pip install -r ansible/requirements.txt
+        displayName: Install Ansible
+
+      - bash: |
+          mkdir download
+          cp /mnt/isos/official/windows/${{ parameters.windows_iso }} download/
+        displayName: Download ISO
+
+      - bash: |
+          . ./venv/bin/activate
+          packer build -var-file=ci.pkrvars.hcl -only 'virtualbox-iso.disk' ${{ parameters.packer_file }}
+        displayName: Packer Build Disk
+
+      - bash: |
+          qemu-img convert -p -f vmdk -O qcow2 output/win10x64-enterprise-disk001.vmdk win10x64-enterprise.cqow2
+        displayName: vmdk to cqow2
+
+      - bash: |
+          mv win10x64-enterprise.cqow2 /mnt/domains/templates/
+        displayName: Update Disk Template
+
+      - bash: |
+          . ./venv/bin/activate
+          cd ansible
+          ansible-galaxy collection install -r collections.yml -p collections --force
+        displayName: Dependent Ansible Collections
+
+      - bash: |
+          . ./venv/bin/activate
+          packer build -var-file=ci.pkrvars.hcl  -only 'virtualbox-ovf.vagrant' ${{ parameters.packer_file }}
+        displayName: Packing Vagrant Box
+
+      - bash: |
+          mv packer_vagrant_virtualbox.box /mnt/vagrant/windows/${{ parameters.vagrant_name }}
+        displayName: Update Vagrant Box

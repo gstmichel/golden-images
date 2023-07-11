@@ -1,2 +1,21 @@
+# IDE
+.vscode/
+
+# Vagrant
+.vagrant/
+Vagrantfile
+
+# Packer Generated
+output*/
+*.box
+ansible/inventory
+
+# Python
+venv/
+
+# Temporary Directory
+download/
+
+# Debian
 debian/server-noswap/isofiles/
 debian/server-noswap/isohdpfx.bin

@@ -1,0 +1,32 @@
+---
+- name: Vagrant
+  hosts: all
+  tasks:
+    - name: Install Guess Additions
+      ansible.windows.win_powershell:
+        script: Start-Process -FilePath "d:\VBoxWindowsAdditions.exe" -ArgumentList "/S" -Wait
+
+    # Already done on win10
+    # - name: Disable complex password
+    #   community.windows.win_security_policy:
+
+    - name: Vagrant User
+      ansible.windows.win_user:
+        name: vagrant
+        password: vagrant
+        password_never_expires: true
+        groups: Administrators
+
+    - name: Disable UAC
+      ansible.windows.win_regedit:
+        path: HKLM:\Software\Microsoft\Windows\CurrentVersion\policies\system
+        name: EnableLUA
+        data: 0
+        type: dword
+
+    - name: Disable Shutdown Tracker
+      ansible.windows.win_regedit:
+        path: HKLM:\SOFTWARE\Policies\Microsoft\Windows NT\Reliability
+        name: ShutdownReasonOn
+        data: 0
+        type: dword
